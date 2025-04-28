@@ -11,7 +11,7 @@ app.use(express.json());
 
 //mongodb
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 // const uri = process.env.MONGODB_URI;
 
@@ -74,25 +74,24 @@ async function run() {
       }
     });
 
-   app.get("/:id/my-list", async (req, res) => {
-     const { id } = req.params; // Extract UID from URL
+    app.get("/:id/my-list", async (req, res) => {
+      const { id } = req.params; // Extract UID from URL
 
-     if (!id) {
-       return res.status(400).json({ error: "UID is required in URL" });
-     }
+      if (!id) {
+        return res.status(400).json({ error: "UID is required in URL" });
+      }
 
-     try {
-       const spots = await touristSpotsCollection
-         .find({ "addedBy.uId": id })
-         .toArray();
-       console.log(spots)
-       
-       return res.json(spots);
-     } catch (err) {
-       console.error("Error fetching user's list:", err);
-       return res.status(500).json({ error: "Internal server error" });
-     }
-   });
+      try {
+        const spots = await touristSpotsCollection
+          .find({ "addedBy.uId": id })
+          .toArray();
+
+        return res.json(spots);
+      } catch (err) {
+        console.error("Error fetching user's list:", err);
+        return res.status(500).json({ error: "Internal server error" });
+      }
+    });
 
     // Get all tourist spots
     app.get("/tourist-spots", async (req, res) => {
@@ -111,6 +110,17 @@ async function run() {
       };
       const result = await touristSpotsCollection.insertOne(touristSpot);
       res.status(201).json(result);
+    });
+
+    // delete tourist spot
+    app.delete("/tourist-spots/:id", async (req, res) => {
+      const { id } = req.params;
+      console.log(id);
+
+      const result = await touristSpotsCollection.deleteOne({
+        _id: new ObjectId(id),
+      });
+      res.status(200).json(result);
     });
   } finally {
     // Ensures that the client will close when you finish/error
