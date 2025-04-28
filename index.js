@@ -100,6 +100,19 @@ async function run() {
       res.json(touristSpots);
     });
 
+    app.get("/tourist-spots/:id", async (req, res) => {
+      const { id } = req.params;
+      console.log(id)
+      
+      const touristSpot = await touristSpotsCollection.findOne({
+        _id: new ObjectId(id),
+      });
+      if (!touristSpot) {
+        return res.status(404).json({ message: "Tourist spot not found" });
+      }
+      res.json(touristSpot);
+    });
+
     //add tourist spot
     app.post("/tourist-spots", async (req, res) => {
       const touristSpot = {
