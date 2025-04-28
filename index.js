@@ -56,14 +56,14 @@ async function run() {
           return res.json({ message: "User already exists" });
         }
 
-        const newUser = ({
+        const newUser = {
           uid,
           name,
           email,
           photo,
           role: "user",
           createdAt: new Date(),
-        });
+        };
 
         const result = await usersCollection.insertOne(newUser);
         console.log("User created:", result);
@@ -73,6 +73,26 @@ async function run() {
         return res.status(500).json({ error: "Internal server error" });
       }
     });
+
+   app.get("/:id/my-list", async (req, res) => {
+     const { id } = req.params; // Extract UID from URL
+
+     if (!id) {
+       return res.status(400).json({ error: "UID is required in URL" });
+     }
+
+     try {
+       const spots = await touristSpotsCollection
+         .find({ "addedBy.uId": id })
+         .toArray();
+       console.log(spots)
+       
+       return res.json(spots);
+     } catch (err) {
+       console.error("Error fetching user's list:", err);
+       return res.status(500).json({ error: "Internal server error" });
+     }
+   });
 
     // Get all tourist spots
     app.get("/tourist-spots", async (req, res) => {
@@ -88,7 +108,6 @@ async function run() {
         createdAt: new Date(),
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         status: "pending",
-       
       };
       const result = await touristSpotsCollection.insertOne(touristSpot);
       res.status(201).json(result);
