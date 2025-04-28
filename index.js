@@ -113,6 +113,41 @@ async function run() {
       res.json(touristSpot);
     });
 
+    //Update tourist spot
+   app.patch("/tourist-spots/:id", async (req, res) => {
+     const { id } = req.params;
+     const updatedTouristSpot = req.body;
+
+     console.log( id, updatedTouristSpot);
+     
+
+     try {
+       const filter = { _id: new ObjectId(id) };
+       const options = { upsert: true }; // This creates a new doc if none matches. ⚡
+       const updateDoc = {
+         $set: {
+           ...updatedTouristSpot,
+           updatedAt: new Date(), // Always a smart move to track updates ✅
+         },
+       };
+
+       const result = await touristSpotsCollection.updateOne(
+         filter,
+         updateDoc,
+         options
+       );
+
+       if (result.matchedCount === 0) {
+         return res.status(404).json({ message: "Tourist spot not found" });
+       }
+
+       res.json(result);
+     } catch (error) {
+       console.error(error);
+       res.status(500).json({ message: "Internal Server Error" });
+     }
+   });
+
     //add tourist spot
     app.post("/tourist-spots", async (req, res) => {
       const touristSpot = {
