@@ -40,10 +40,39 @@ async function run() {
     // Connect to the database and access its collection
     const database = client.db("destinaGuide");
     const touristSpotsCollection = database.collection("touristSpots");
+    const usersCollection = database.collection("users");
 
     /************************/
-          // routes
+    // routes
     /***********************/
+
+    app.post("/users", async (req, res) => {
+      const { uid, name, email, photo } = req.body;
+
+      try {
+        const existingUser = await usersCollection.findOne({ uid });
+
+        if (existingUser) {
+          return res.json({ message: "User already exists" });
+        }
+
+        const newUser = ({
+          uid,
+          name,
+          email,
+          photo,
+          role: "user",
+          createdAt: new Date(),
+        });
+
+        const result = await usersCollection.insertOne(newUser);
+        console.log("User created:", result);
+        return res.status(201).json({ message: "User created" });
+      } catch (err) {
+        console.error("Error creating user:", err);
+        return res.status(500).json({ error: "Internal server error" });
+      }
+    });
 
     // Get all tourist spots
     app.get("/tourist-spots", async (req, res) => {
@@ -58,6 +87,8 @@ async function run() {
         ...req.body,
         createdAt: new Date(),
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        status: "pending",
+       
       };
       const result = await touristSpotsCollection.insertOne(touristSpot);
       res.status(201).json(result);
