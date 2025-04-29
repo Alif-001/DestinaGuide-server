@@ -1,9 +1,12 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const cron = require("node-cron");
+const fetch = require("node-fetch");
 
 const app = express();
 const port = process.env.PORT || 3000;
+const BASE_URL = process.env.HOSTED_URL || `http://localhost:${port}`;
 
 //middleware
 app.use(cors());
@@ -195,6 +198,31 @@ async function run() {
     //     res.status(500).json({ error: "Internal Server Error" });
     //   }
     // });
+
+    // 1️⃣ Ping route for keep-alive
+    app.get("/ping", (req, res) =>
+      res.json({ status: "alive", time: new Date() })
+    );
+
+    // 2️⃣ Cron job: self-ping monthly at midnight on the 1st
+    cron.schedule("0 0 1 * *", async () => {
+      console.log("🌙 Monthly keep-alive at", new Date());
+      try {
+        // Web dyno keep-alive
+        await fetch(`${process.env.HOSTED_URL}/ping`);
+        console.log("✅ Web ping succeeded");
+      } catch (e) {
+        console.error("❌ Web ping failed", e);
+      }
+
+      try {
+        // DB keep-alive
+        await client.db().command({ ping: 1 });
+        console.log("✅ DB ping succeeded");
+      } catch (e) {
+        console.error("❌ DB ping failed", e);
+      }
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
