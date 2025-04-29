@@ -102,8 +102,8 @@ async function run() {
 
     app.get("/tourist-spots/:id", async (req, res) => {
       const { id } = req.params;
-      console.log(id)
-      
+      console.log(id);
+
       const touristSpot = await touristSpotsCollection.findOne({
         _id: new ObjectId(id),
       });
@@ -114,39 +114,38 @@ async function run() {
     });
 
     //Update tourist spot
-   app.patch("/tourist-spots/:id", async (req, res) => {
-     const { id } = req.params;
-     const updatedTouristSpot = req.body;
+    app.patch("/tourist-spots/:id", async (req, res) => {
+      const { id } = req.params;
+      const updatedTouristSpot = req.body;
 
-     console.log( id, updatedTouristSpot);
-     
+      console.log(id, updatedTouristSpot);
 
-     try {
-       const filter = { _id: new ObjectId(id) };
-       const options = { upsert: true }; // This creates a new doc if none matches. ⚡
-       const updateDoc = {
-         $set: {
-           ...updatedTouristSpot,
-           updatedAt: new Date(), // Always a smart move to track updates ✅
-         },
-       };
+      try {
+        const filter = { _id: new ObjectId(id) };
+        const options = { upsert: true }; // This creates a new doc if none matches. ⚡
+        const updateDoc = {
+          $set: {
+            ...updatedTouristSpot,
+            updatedAt: new Date(), // Always a smart move to track updates ✅
+          },
+        };
 
-       const result = await touristSpotsCollection.updateOne(
-         filter,
-         updateDoc,
-         options
-       );
+        const result = await touristSpotsCollection.updateOne(
+          filter,
+          updateDoc,
+          options
+        );
 
-       if (result.matchedCount === 0) {
-         return res.status(404).json({ message: "Tourist spot not found" });
-       }
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ message: "Tourist spot not found" });
+        }
 
-       res.json(result);
-     } catch (error) {
-       console.error(error);
-       res.status(500).json({ message: "Internal Server Error" });
-     }
-   });
+        res.json(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal Server Error" });
+      }
+    });
 
     //add tourist spot
     app.post("/tourist-spots", async (req, res) => {
@@ -170,6 +169,32 @@ async function run() {
       });
       res.status(200).json(result);
     });
+
+    // ✅ Get tourist spots that match the user's country
+    // app.get("/matched-country/:uid", async (req, res) => {
+    //   const { uid } = req.params;
+
+    //   try {
+    //     // Step 1: Get the user by UID
+    //     const user = await usersCollection.findOne({ uid });
+
+    //     if (!user || !user.country) {
+    //       return res.status(404).json({ error: "User or country not found" });
+    //     }
+
+    //     const userCountry = user.country;
+
+    //     // Step 2: Find tourist spots from the same country
+    //     const spots = await touristSpotsCollection
+    //       .find({ country: { $regex: new RegExp(`^${userCountry}$`, "i") } }) // Case-insensitive match
+    //       .toArray();
+
+    //     res.json(spots);
+    //   } catch (error) {
+    //     console.error("Error fetching matched country spots:", error);
+    //     res.status(500).json({ error: "Internal Server Error" });
+    //   }
+    // });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
