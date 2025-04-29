@@ -200,6 +200,8 @@ async function run() {
     // });
 
     // 1️⃣ Ping route for keep-alive
+
+    // 1️⃣ Ping route for keep-alive
     app.get("/ping", (req, res) =>
       res.json({ status: "alive", time: new Date() })
     );
@@ -209,8 +211,8 @@ async function run() {
       console.log("🌙 Monthly keep-alive at", new Date());
       try {
         // Web dyno keep-alive
-        await fetch(`${process.env.HOSTED_URL}/ping`);
-        console.log("✅ Web ping succeeded");
+        const res = await fetch(`${BASE_URL}/ping`);
+        console.log("✅ Web ping succeeded", res);
       } catch (e) {
         console.error("❌ Web ping failed", e);
       }
