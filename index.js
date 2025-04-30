@@ -1,14 +1,11 @@
-// index.js
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const cron = require("node-cron");
+import cors from "cors";
+import dotenv from "dotenv";
+import express from "express";
+import { MongoClient, ObjectId, ServerApiVersion } from "mongodb";
+import cron from "node-cron";
+import fetch from "node-fetch";
 
-// 1️⃣ IMPORT & INITIALIZE FETCH
-// Use node-fetch v3 default export workaround to expose global.fetch
-const fetchImport = require("node-fetch");
-const fetch = fetchImport.default || fetchImport;
-global.fetch = fetch;
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -18,12 +15,7 @@ const BASE_URL = process.env.HOSTED_URL || `http://localhost:${port}`;
 app.use(cors());
 app.use(express.json());
 
-// MongoDB setup
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const uri =
-  process.env.NODE_ENV === "production"
-    ? process.env.MONGODB_URI
-    : "mongodb://localhost:27017/";
+const uri = process.env.MONGODB_URI;
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -141,15 +133,15 @@ async function run() {
       res.json({ status: "alive", time: new Date() })
     );
 
-    // 2️⃣ Cron job: run every minute
+    // Cron job: run every minute
     cron.schedule("0 0 1 * *", async () => {
       console.log("⏰ Cron ping at", new Date());
       try {
         const res = await fetch(`${BASE_URL}/ping`);
         const contentType = res.headers.get("content-type") || "";
-        const body = await res.text();                
+        const body = await res.text();
         if (contentType.includes("application/json")) {
-          const data = JSON.parse(body);                  // safe JSON.parse
+          const data = JSON.parse(body);
           console.log("✅ Web ping succeeded", data);
         }
       } catch (e) {
@@ -161,6 +153,10 @@ async function run() {
       } catch (e) {
         console.error("❌ DB ping failed", e);
       }
+    });
+
+    app.get("/", (req, res) => {
+      res.send("DestinaGuide server is running smoothly! 🚀");
     });
 
     app.listen(port, () => console.log(`Server running on port ${port}`));
